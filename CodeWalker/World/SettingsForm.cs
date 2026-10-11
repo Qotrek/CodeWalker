@@ -99,7 +99,8 @@ namespace CodeWalker.World
 
             if (!string.IsNullOrEmpty(Settings.Default.DLC))
             {
-                int idx = DefaultDlcComboBox.FindString(Settings.Default.DLC);
+                int idx = DefaultDlcComboBox.FindStringExact(Settings.Default.DLC);
+                if (idx < 0) idx = DefaultDlcComboBox.FindString(Settings.Default.DLC);
                 if (idx >= 0)
                 {
                     DefaultDlcComboBox.SelectedIndex = idx;
@@ -255,6 +256,11 @@ namespace CodeWalker.World
             Settings.Default.CameraSmoothing = camSmoothing;
             Settings.Default.EnableDLC = DefaultEnableDlcCheckBox.Checked;
             Settings.Default.DLC = DefaultDlcComboBox.Text;
+            if (worldForm != null)
+            {
+                worldForm.SetDefaultDlc(DefaultDlcComboBox.Text);
+                worldForm.SetEnableDlcOnStartup(DefaultEnableDlcCheckBox.Checked);
+            }
             Settings.Default.Save();
 
             DoneButton.Text = "Done";
@@ -359,11 +365,19 @@ namespace CodeWalker.World
         private void DefaultEnableDlcCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             Settings.Default.EnableDLC = DefaultEnableDlcCheckBox.Checked;
+            if (worldForm != null)
+            {
+                worldForm.SetEnableDlcOnStartup(DefaultEnableDlcCheckBox.Checked);
+            }
         }
 
         private void DefaultDlcComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             Settings.Default.DLC = DefaultDlcComboBox.Text;
+            if (worldForm != null)
+            {
+                worldForm.SetDefaultDlc(DefaultDlcComboBox.Text);
+            }
         }
     }
 }
