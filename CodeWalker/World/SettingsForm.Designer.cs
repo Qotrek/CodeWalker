@@ -1,4 +1,4 @@
-﻿namespace CodeWalker.World
+namespace CodeWalker.World
 {
     partial class SettingsForm
     {
@@ -47,6 +47,10 @@
             this.KeyBindButton = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.AdvancedTabPage = new System.Windows.Forms.TabPage();
+            this.DefaultEnableDlcCheckBox = new System.Windows.Forms.CheckBox();
+            this.labelDefaultDlc = new System.Windows.Forms.Label();
+            this.DefaultDlcComboBox = new System.Windows.Forms.ComboBox();
+            this.labelDefaultDlcDesc = new System.Windows.Forms.Label();
             this.label22 = new System.Windows.Forms.Label();
             this.CollisionCacheSizeUpDown = new System.Windows.Forms.NumericUpDown();
             this.label23 = new System.Windows.Forms.Label();
@@ -296,6 +300,10 @@
             // 
             // AdvancedTabPage
             // 
+            this.AdvancedTabPage.Controls.Add(this.labelDefaultDlcDesc);
+            this.AdvancedTabPage.Controls.Add(this.DefaultDlcComboBox);
+            this.AdvancedTabPage.Controls.Add(this.labelDefaultDlc);
+            this.AdvancedTabPage.Controls.Add(this.DefaultEnableDlcCheckBox);
             this.AdvancedTabPage.Controls.Add(this.label22);
             this.AdvancedTabPage.Controls.Add(this.CollisionCacheSizeUpDown);
             this.AdvancedTabPage.Controls.Add(this.label23);
@@ -380,6 +388,45 @@
             this.label23.Size = new System.Drawing.Size(81, 13);
             this.label23.TabIndex = 75;
             this.label23.Text = "Collision cache:";
+            // 
+            // DefaultEnableDlcCheckBox
+            // 
+            this.DefaultEnableDlcCheckBox.AutoSize = true;
+            this.DefaultEnableDlcCheckBox.Location = new System.Drawing.Point(9, 368);
+            this.DefaultEnableDlcCheckBox.Name = "DefaultEnableDlcCheckBox";
+            this.DefaultEnableDlcCheckBox.Size = new System.Drawing.Size(130, 17);
+            this.DefaultEnableDlcCheckBox.TabIndex = 78;
+            this.DefaultEnableDlcCheckBox.Text = "Enable DLC on startup";
+            this.DefaultEnableDlcCheckBox.UseVisualStyleBackColor = true;
+            this.DefaultEnableDlcCheckBox.CheckedChanged += new System.EventHandler(this.DefaultEnableDlcCheckBox_CheckedChanged);
+            // 
+            // labelDefaultDlc
+            // 
+            this.labelDefaultDlc.AutoSize = true;
+            this.labelDefaultDlc.Location = new System.Drawing.Point(6, 395);
+            this.labelDefaultDlc.Name = "labelDefaultDlc";
+            this.labelDefaultDlc.Size = new System.Drawing.Size(68, 13);
+            this.labelDefaultDlc.TabIndex = 79;
+            this.labelDefaultDlc.Text = "Default DLC:";
+            // 
+            // DefaultDlcComboBox
+            // 
+            this.DefaultDlcComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.DefaultDlcComboBox.FormattingEnabled = true;
+            this.DefaultDlcComboBox.Location = new System.Drawing.Point(110, 392);
+            this.DefaultDlcComboBox.Name = "DefaultDlcComboBox";
+            this.DefaultDlcComboBox.Size = new System.Drawing.Size(126, 21);
+            this.DefaultDlcComboBox.TabIndex = 80;
+            this.DefaultDlcComboBox.SelectedIndexChanged += new System.EventHandler(this.DefaultDlcComboBox_SelectedIndexChanged);
+            // 
+            // labelDefaultDlcDesc
+            // 
+            this.labelDefaultDlcDesc.AutoSize = true;
+            this.labelDefaultDlcDesc.Location = new System.Drawing.Point(242, 395);
+            this.labelDefaultDlcDesc.Name = "labelDefaultDlcDesc";
+            this.labelDefaultDlcDesc.Size = new System.Drawing.Size(193, 13);
+            this.labelDefaultDlcDesc.TabIndex = 81;
+            this.labelDefaultDlcDesc.Text = "DLC level loaded when DLC is enabled.";
             // 
             // label20
             // 
@@ -883,5 +930,9 @@
         private System.Windows.Forms.NumericUpDown TextureCacheSizeUpDown;
         private System.Windows.Forms.Label label21;
         private System.Windows.Forms.CheckBox MouseInvertCheckBox;
+        private System.Windows.Forms.CheckBox DefaultEnableDlcCheckBox;
+        private System.Windows.Forms.Label labelDefaultDlc;
+        private System.Windows.Forms.ComboBox DefaultDlcComboBox;
+        private System.Windows.Forms.Label labelDefaultDlcDesc;
     }
 }

@@ -4569,7 +4569,7 @@ namespace CodeWalker
                     else
                     {
                         int idx = DlcLevelComboBox.FindString(gameFileCache.SelectedDlc);
-                        DlcLevelComboBox.SelectedIndex = (idx > 0) ? idx : (dlcnames.Count - 1);
+                        DlcLevelComboBox.SelectedIndex = (idx >= 0) ? idx : (dlcnames.Count - 1);
                     }
                 }
             }
@@ -4843,7 +4843,11 @@ namespace CodeWalker
             EnableModsCheckBox.Checked = s.EnableMods;
             DlcLevelComboBox.Text = s.DLC;
             gameFileCache.SelectedDlc = s.DLC;
-            EnableDlcCheckBox.Checked = !string.IsNullOrEmpty(s.DLC);
+            EnableDlcCheckBox.Checked = s.EnableDLC;
+            if (EnableDlcOnStartupCheckBox != null)
+            {
+                EnableDlcOnStartupCheckBox.Checked = s.EnableDLC;
+            }
         }
         private void SaveSettings()
         {
@@ -4895,7 +4899,8 @@ namespace CodeWalker
 
             //additional settings from gamefilecache...
             s.EnableMods = gameFileCache.EnableMods;
-            s.DLC = gameFileCache.EnableDlc ? gameFileCache.SelectedDlc : "";
+            s.EnableDLC = (EnableDlcOnStartupCheckBox != null) ? EnableDlcOnStartupCheckBox.Checked : EnableDlcCheckBox.Checked;
+            s.DLC = !string.IsNullOrEmpty(DlcLevelComboBox.Text) ? DlcLevelComboBox.Text : gameFileCache.SelectedDlc;
 
             s.Save();
         }
@@ -4940,6 +4945,10 @@ namespace CodeWalker
         public void OnSettingsFormClosed()
         {
             //called by the SettingsForm when it's closed.
+            if (EnableDlcOnStartupCheckBox != null)
+            {
+                EnableDlcOnStartupCheckBox.Checked = Settings.Default.EnableDLC;
+            }
             SettingsForm = null;
         }
 
@@ -7351,7 +7360,17 @@ namespace CodeWalker
                 return;
             }
 
+            if (EnableDlcOnStartupCheckBox != null)
+            {
+                EnableDlcOnStartupCheckBox.Checked = EnableDlcCheckBox.Checked;
+            }
+
             SetDlcLevel(DlcLevelComboBox.Text, EnableDlcCheckBox.Checked);
+        }
+
+        private void EnableDlcOnStartupCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.EnableDLC = EnableDlcOnStartupCheckBox.Checked;
         }
 
         private void DlcLevelComboBox_SelectedIndexChanged(object sender, EventArgs e)

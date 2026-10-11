@@ -1,4 +1,4 @@
-﻿using CodeWalker.Properties;
+using CodeWalker.Properties;
 using CodeWalker.Utils;
 using System;
 using System.Collections.Generic;
@@ -82,6 +82,37 @@ namespace CodeWalker.World
             GeometryCacheSizeUpDown.Value = Math.Min(Math.Max(Settings.Default.GPUGeometryCacheSize / 1048576, GeometryCacheSizeUpDown.Minimum), GeometryCacheSizeUpDown.Maximum);
             TextureCacheSizeUpDown.Value = Math.Min(Math.Max(Settings.Default.GPUTextureCacheSize / 1048576, TextureCacheSizeUpDown.Minimum), TextureCacheSizeUpDown.Maximum);
             CollisionCacheSizeUpDown.Value = Math.Min(Math.Max(Settings.Default.GPUBoundCompCacheSize / 1048576, CollisionCacheSizeUpDown.Minimum), CollisionCacheSizeUpDown.Maximum);
+
+            DefaultEnableDlcCheckBox.Checked = Settings.Default.EnableDLC;
+            DefaultDlcComboBox.Items.Clear();
+            if (worldForm?.GameFileCache?.DlcNameList != null && worldForm.GameFileCache.DlcNameList.Count > 0)
+            {
+                foreach (var dlc in worldForm.GameFileCache.DlcNameList)
+                {
+                    DefaultDlcComboBox.Items.Add(dlc);
+                }
+            }
+            else if (!string.IsNullOrEmpty(Settings.Default.DLC))
+            {
+                DefaultDlcComboBox.Items.Add(Settings.Default.DLC);
+            }
+
+            if (!string.IsNullOrEmpty(Settings.Default.DLC))
+            {
+                int idx = DefaultDlcComboBox.FindString(Settings.Default.DLC);
+                if (idx >= 0)
+                {
+                    DefaultDlcComboBox.SelectedIndex = idx;
+                }
+                else
+                {
+                    DefaultDlcComboBox.Text = Settings.Default.DLC;
+                }
+            }
+            else if (DefaultDlcComboBox.Items.Count > 0)
+            {
+                DefaultDlcComboBox.SelectedIndex = DefaultDlcComboBox.Items.Count - 1;
+            }
         }
 
 
@@ -222,6 +253,8 @@ namespace CodeWalker.World
             Settings.Default.KeyBindings = keyBindings.GetSetting();
             Settings.Default.CameraSensitivity = camSensitivity;
             Settings.Default.CameraSmoothing = camSmoothing;
+            Settings.Default.EnableDLC = DefaultEnableDlcCheckBox.Checked;
+            Settings.Default.DLC = DefaultDlcComboBox.Text;
             Settings.Default.Save();
 
             DoneButton.Text = "Done";
@@ -265,6 +298,7 @@ namespace CodeWalker.World
 
         private void SettingsForm_FormClosed(object sender, FormClosedEventArgs e)
         {
+            Settings.Default.Save();
             if (worldForm != null)
             {
                 worldForm.OnSettingsFormClosed();
@@ -320,6 +354,16 @@ namespace CodeWalker.World
         private void CollisionCacheSizeUpDown_ValueChanged(object sender, EventArgs e)
         {
             Settings.Default.GPUBoundCompCacheSize = (long)CollisionCacheSizeUpDown.Value * 1048576;
+        }
+
+        private void DefaultEnableDlcCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.EnableDLC = DefaultEnableDlcCheckBox.Checked;
+        }
+
+        private void DefaultDlcComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Settings.Default.DLC = DefaultDlcComboBox.Text;
         }
     }
 }

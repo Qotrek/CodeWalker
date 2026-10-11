@@ -1,4 +1,4 @@
-﻿using CodeWalker.WinForms;
+using CodeWalker.WinForms;
 
 namespace CodeWalker
 {
@@ -113,6 +113,7 @@ namespace CodeWalker
             this.OptionsGeneralTabPage = new System.Windows.Forms.TabPage();
             this.SaveTimeOfDayCheckBox = new System.Windows.Forms.CheckBox();
             this.SavePositionCheckBox = new System.Windows.Forms.CheckBox();
+            this.EnableDlcOnStartupCheckBox = new System.Windows.Forms.CheckBox();
             this.ResetSettingsButton = new System.Windows.Forms.Button();
             this.CarGeneratorsCheckBox = new System.Windows.Forms.CheckBox();
             this.RenderEntitiesCheckBox = new System.Windows.Forms.CheckBox();
@@ -1366,6 +1367,7 @@ namespace CodeWalker
             // 
             // OptionsGeneralTabPage
             // 
+            this.OptionsGeneralTabPage.Controls.Add(this.EnableDlcOnStartupCheckBox);
             this.OptionsGeneralTabPage.Controls.Add(this.SaveTimeOfDayCheckBox);
             this.OptionsGeneralTabPage.Controls.Add(this.SavePositionCheckBox);
             this.OptionsGeneralTabPage.Controls.Add(this.ResetSettingsButton);
@@ -1404,10 +1406,21 @@ namespace CodeWalker
             this.OptionsGeneralTabPage.Text = "General";
             this.OptionsGeneralTabPage.UseVisualStyleBackColor = true;
             // 
+            // EnableDlcOnStartupCheckBox
+            // 
+            this.EnableDlcOnStartupCheckBox.AutoSize = true;
+            this.EnableDlcOnStartupCheckBox.Location = new System.Drawing.Point(10, 497);
+            this.EnableDlcOnStartupCheckBox.Name = "EnableDlcOnStartupCheckBox";
+            this.EnableDlcOnStartupCheckBox.Size = new System.Drawing.Size(129, 17);
+            this.EnableDlcOnStartupCheckBox.TabIndex = 150;
+            this.EnableDlcOnStartupCheckBox.Text = "Enable DLC on startup";
+            this.EnableDlcOnStartupCheckBox.UseVisualStyleBackColor = true;
+            this.EnableDlcOnStartupCheckBox.CheckedChanged += new System.EventHandler(this.EnableDlcOnStartupCheckBox_CheckedChanged);
+            // 
             // SaveTimeOfDayCheckBox
             // 
             this.SaveTimeOfDayCheckBox.AutoSize = true;
-            this.SaveTimeOfDayCheckBox.Location = new System.Drawing.Point(10, 485);
+            this.SaveTimeOfDayCheckBox.Location = new System.Drawing.Point(10, 476);
             this.SaveTimeOfDayCheckBox.Name = "SaveTimeOfDayCheckBox";
             this.SaveTimeOfDayCheckBox.Size = new System.Drawing.Size(139, 17);
             this.SaveTimeOfDayCheckBox.TabIndex = 149;
@@ -1417,7 +1430,7 @@ namespace CodeWalker
             // SavePositionCheckBox
             // 
             this.SavePositionCheckBox.AutoSize = true;
-            this.SavePositionCheckBox.Location = new System.Drawing.Point(10, 464);
+            this.SavePositionCheckBox.Location = new System.Drawing.Point(10, 455);
             this.SavePositionCheckBox.Name = "SavePositionCheckBox";
             this.SavePositionCheckBox.Size = new System.Drawing.Size(124, 17);
             this.SavePositionCheckBox.TabIndex = 148;
@@ -3978,5 +3991,6 @@ namespace CodeWalker
         private System.Windows.Forms.ToolStripMenuItem ToolsMenuAudioExplorer;
         private System.Windows.Forms.CheckBox SaveTimeOfDayCheckBox;
         private System.Windows.Forms.CheckBox SavePositionCheckBox;
+        private System.Windows.Forms.CheckBox EnableDlcOnStartupCheckBox;
     }
 }

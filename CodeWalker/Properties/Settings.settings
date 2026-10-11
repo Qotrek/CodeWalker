@@ -140,6 +140,9 @@
     <Setting Name="EnableMods" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="EnableDLC" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
     <Setting Name="DLC" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
