@@ -7,16 +7,23 @@
 
 ---
 
-### 🚀 What's New in this Fork (RPF Explorer Improvements)
+### 🚀 What's New in this Fork
 
-This fork optimizes **CodeWalker RPF Explorer** for standalone asset browsing and mod development (e.g. FiveM / custom resources):
+This fork optimizes **CodeWalker** (both the 3D Map Editor and RPF Explorer) for standalone asset browsing, mod development, and modern workflows:
 
+#### ⚡ RPF Explorer
 - **Instant Exit (No System Hang)**: Fixed the critical Windows freeze / 20+ second mouse stutter when closing RPF Explorer with `[X]`. The application now terminates instantly without locking the OS.
 - **On-Demand GTA V Loading**: Added a toggle to disable automatic scanning and loading of all heavy GTA V game archives on startup (`Options -> Auto load GTA V on startup`).
 - **"Load GTA" Toolbar Button**: When GTA auto-loading is disabled, a toolbar button allows loading full GTA V archives on-demand only when needed.
 - **Custom Startup Folder**: Configure a default working folder (e.g. your FiveM `[stream]` directory or mod workspace) via `Options -> Start folder... -> Choose Folder...`. RPF Explorer opens directly into your project on launch.
 - **External Folder Scanning Fix**: Fixed a bug where external non-GTA directory trees failed to attach child folders and display files in the list view.
-- **Modern .NET SDK Support**: Added configuration enabling compilation directly via modern .NET 8 SDK without legacy WinForms resource errors.
+
+#### 🌍 CodeWalker 3D Map Editor
+- **Enable DLC on Startup**: Added setting to automatically enable DLC when starting CodeWalker (`Options -> General -> Enable DLC on startup`).
+- **Configurable Default DLC Level**: Select and permanently save the default DLC pack to load (`Options -> General -> Advanced... -> Default DLC:`, or pick from the `World` panel and click `Save settings`).
+- **Exact DLC Matching Fix**: Fixed a bug where prefix matching in the DLC dropdown caused packages like `mp2026_01` to be mistakenly replaced with `mp2026_01_g9ec`.
+- **Startup Crash Prevention**: Fixed `ArgumentOutOfRangeException` when launching CodeWalker by adding safety checks and auto-bundling assets (`icons/` and `Shaders/`).
+- **Modern .NET SDK Support**: Configured projects to build cleanly out-of-the-box using the modern .NET 8 SDK / MSBuild.
 
 > [!NOTE]
 > **Disclaimer & Legal Attribution:** This is an unofficial community fork. Original CodeWalker application, architecture, and core codebase by [dexyfex](https://github.com/dexyfex/CodeWalker). All original copyrights and notices apply (see [Notice.txt](Notice.txt) and [Readme_Src.txt](Readme_Src.txt)).
