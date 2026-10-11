@@ -5,5 +5,14 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
   </ItemGroup>
+  <ItemGroup Condition="'$(OutputType)' == 'WinExe' or '$(OutputType)' == 'Exe'">
+    <None Include="$(MSBuildThisFileDirectory)icons\**\*.*">
+      <Link>icons\%(RecursiveDir)%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Shaders\**\*.*">
+      <Link>Shaders\%(RecursiveDir)%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
-

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -273,15 +273,15 @@ namespace CodeWalker
             AddIcon("Google Marker", "icon_google_marker_64x64.png", 64, 64, 11.0f, 40.0f, 1.0f);
             AddIcon("Glokon Marker", "icon_glokon_normal_32x32.png", 32, 32, 11.0f, 32.0f, 1.0f);
             AddIcon("Glokon Debug", "icon_glokon_debug_32x32.png", 32, 32, 11.5f, 32.0f, 1.0f);
-            MarkerIcon = Icons[1];
-            LocatorIcon = Icons[2];
+            MarkerIcon = (Icons.Count > 1) ? Icons[1] : (Icons.Count > 0 ? Icons[0] : null);
+            LocatorIcon = (Icons.Count > 2) ? Icons[2] : MarkerIcon;
             foreach (MapIcon icon in Icons)
             {
                 MarkerStyleComboBox.Items.Add(icon);
                 LocatorStyleComboBox.Items.Add(icon);
             }
-            MarkerStyleComboBox.SelectedItem = MarkerIcon; //LoadSettings will handle this
-            LocatorStyleComboBox.SelectedItem = LocatorIcon;
+            if (MarkerIcon != null) MarkerStyleComboBox.SelectedItem = MarkerIcon; //LoadSettings will handle this
+            if (LocatorIcon != null) LocatorStyleComboBox.SelectedItem = LocatorIcon;
             LocatorMarker = new MapMarker();
             LocatorMarker.Icon = LocatorIcon;
             LocatorMarker.IsMovable = true;
