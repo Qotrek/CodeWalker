@@ -1,7 +1,27 @@
 <div align="center">
     <h1>CodeWalker by dexyfex</h1>
     This program is for viewing the contents of GTAV RPF archives.
+    <br><br>
+    <b>⚡ Unofficial RPF Explorer Performance & Usability Fork</b>
 </div>
+
+---
+
+### 🚀 What's New in this Fork (RPF Explorer Improvements)
+
+This fork optimizes **CodeWalker RPF Explorer** for standalone asset browsing and mod development (e.g. FiveM / custom resources):
+
+- **Instant Exit (No System Hang)**: Fixed the critical Windows freeze / 20+ second mouse stutter when closing RPF Explorer with `[X]`. The application now terminates instantly without locking the OS.
+- **On-Demand GTA V Loading**: Added a toggle to disable automatic scanning and loading of all heavy GTA V game archives on startup (`Options -> Auto load GTA V on startup`).
+- **"Load GTA" Toolbar Button**: When GTA auto-loading is disabled, a toolbar button allows loading full GTA V archives on-demand only when needed.
+- **Custom Startup Folder**: Configure a default working folder (e.g. your FiveM `[stream]` directory or mod workspace) via `Options -> Start folder... -> Choose Folder...`. RPF Explorer opens directly into your project on launch.
+- **External Folder Scanning Fix**: Fixed a bug where external non-GTA directory trees failed to attach child folders and display files in the list view.
+- **Modern .NET SDK Support**: Added configuration enabling compilation directly via modern .NET 8 SDK without legacy WinForms resource errors.
+
+> [!NOTE]
+> **Disclaimer & Legal Attribution:** This is an unofficial community fork. Original CodeWalker application, architecture, and core codebase by [dexyfex](https://github.com/dexyfex/CodeWalker). All original copyrights and notices apply (see [Notice.txt](Notice.txt) and [Readme_Src.txt](Readme_Src.txt)).
+
+---
 
 ## Requirements:
 - PC version of GTA:V;
