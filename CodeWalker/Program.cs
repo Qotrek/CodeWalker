@@ -1,5 +1,6 @@
-﻿using CodeWalker.Properties;
+using CodeWalker.Properties;
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -75,7 +76,9 @@ namespace CodeWalker
                 }
                 else if (explorermode)
                 {
-                    Application.Run(new ExploreForm());
+                    Application.Run(new ExploreForm() { IsStandalone = true });
+                    GTAFolder.UpdateSettings();
+                    Process.GetCurrentProcess().Kill();
                 }
                 else if (projectmode)
                 {

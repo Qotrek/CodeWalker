@@ -1,4 +1,4 @@
-﻿using CodeWalker.GameFiles;
+using CodeWalker.GameFiles;
 using CodeWalker.Properties;
 using System;
 using System.Collections.Generic;
@@ -21,9 +21,10 @@ namespace CodeWalker.RPFExplorer
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new ExploreForm());
+            Application.Run(new ExploreForm() { IsStandalone = true });
 
             GTAFolder.UpdateSettings();
+            Process.GetCurrentProcess().Kill();
         }
     }
 }

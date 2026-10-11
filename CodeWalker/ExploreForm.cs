@@ -1,4 +1,4 @@
-﻿using CodeWalker.Forms;
+using CodeWalker.Forms;
 using CodeWalker.GameFiles;
 using CodeWalker.Properties;
 using CodeWalker.Tools;
@@ -23,6 +23,7 @@ namespace CodeWalker
     public partial class ExploreForm : Form
     {
         private volatile bool Ready = false;
+        private volatile bool GTALoaded = false;
 
         private Dictionary<string, FileTypeInfo> FileTypes;
         private readonly char[] InvalidFileNameChars = Path.GetInvalidFileNameChars();
@@ -51,6 +52,7 @@ namespace CodeWalker
         private object FileCacheSyncRoot = new object();
 
         public bool EditMode { get; private set; } = false;
+        public bool IsStandalone { get; set; } = false;
 
         public ThemeBase Theme { get; private set; }
 
@@ -133,12 +135,30 @@ namespace CodeWalker
             //if (File.Exists(configFile)) MainDockPanel.LoadFromXml(configFile, m_deserializeDockContent);
         }
 
+        private void EnsureExtraRootFolder(string folderPath)
+        {
+            if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath)) return;
+            var cleanPath = folderPath.Trim().TrimEnd('\\', '/');
+            foreach (var folder in ExtraRootFolders)
+            {
+                if (string.Equals(folder.FullPath?.TrimEnd('\\', '/'), cleanPath, StringComparison.OrdinalIgnoreCase)) return;
+            }
+            var root = new MainTreeFolder();
+            root.FullPath = cleanPath + "\\";
+            root.Path = cleanPath + "\\";
+            root.Name = new DirectoryInfo(cleanPath).Name;
+            root.IsExtraFolder = true;
+            ExtraRootFolders.Add(root);
+        }
+
         private void LoadSettings()
         {
             var s = Settings.Default;
 
             OptionsStartInEditModeMenu.Checked = s.RPFExplorerStartInEditMode;
+            OptionsAutoLoadGTAMenu.Checked = s.RPFExplorerAutoLoadGTA;
             OptionsStartInFolderValueMenu.Text = string.IsNullOrEmpty(s.RPFExplorerStartFolder) ? "(Default)" : s.RPFExplorerStartFolder;
+            UpdateLoadGTAButtonVisibility();
 
             var folders = s.RPFExplorerExtraFolders?.Split('\n');
             if (folders != null)
@@ -146,16 +166,16 @@ namespace CodeWalker
                 foreach (var folder in folders)
                 {
                     var folderPath = folder?.Trim();
-                    if (!string.IsNullOrEmpty(folderPath))
+                    if (!string.IsNullOrEmpty(folderPath) && Directory.Exists(folderPath))
                     {
-                        var root = new MainTreeFolder();
-                        root.FullPath = folderPath;
-                        root.Path = folderPath;
-                        root.Name = Path.GetFileName(Path.GetDirectoryName(folderPath));
-                        root.IsExtraFolder = true;
-                        ExtraRootFolders.Add(root);
+                        EnsureExtraRootFolder(folderPath);
                     }
                 }
+            }
+
+            if (!string.IsNullOrEmpty(s.RPFExplorerStartFolder) && s.RPFExplorerStartFolder.Contains(':') && Directory.Exists(s.RPFExplorerStartFolder))
+            {
+                EnsureExtraRootFolder(s.RPFExplorerStartFolder);
             }
         }
         private void SaveSettings()
@@ -177,33 +197,41 @@ namespace CodeWalker
 
             InitFileTypes();
 
-            // This is probably not necessary now that the GTA folder is checked 
-            // in the Program.cs when the game is initiated, but we will leave it 
-            // here for now to make sure 
-            if(!GTAFolder.UpdateGTAFolder(true))
+            if (Settings.Default.RPFExplorerAutoLoadGTA)
             {
-                Close();
-                return;
+                if (!GTAFolder.UpdateGTAFolder(true))
+                {
+                    Close();
+                    return;
+                }
+            }
+            else
+            {
+                UpdateLoadGTAButtonVisibility();
             }
 
 
             Task.Run(() =>
             {
-                try
+                if (!string.IsNullOrEmpty(GTAFolder.CurrentGTAFolder))
                 {
-                    GTA5Keys.LoadFromPath(GTAFolder.CurrentGTAFolder, GTAFolder.IsGen9, Settings.Default.Key);
-                }
-                catch
-                {
-                    UpdateStatus("Unable to load gta5.exe!");
-                    return;
+                    try
+                    {
+                        GTA5Keys.LoadFromPath(GTAFolder.CurrentGTAFolder, GTAFolder.IsGen9, Settings.Default.Key);
+                    }
+                    catch
+                    {
+                        if (Settings.Default.RPFExplorerAutoLoadGTA)
+                        {
+                            UpdateStatus("Unable to load gta5.exe!");
+                            return;
+                        }
+                    }
                 }
 
                 RefreshMainTreeView();
 
                 UpdateStatus("Scan complete.");
-
-                InitFileCache();
 
                 while (!IsDisposed) //run the file cache content thread until the form exits.
                 {
@@ -232,6 +260,7 @@ namespace CodeWalker
             {
                 lock (FileCacheSyncRoot)
                 {
+                    if (IsDisposed) return;
                     if (!FileCache.IsInited)
                     {
                         UpdateStatus("Loading file cache...");
@@ -464,6 +493,18 @@ namespace CodeWalker
                 {
                     MainTreeView.SelectedNode = n; //this will trigger everything else
                 }
+                else
+                {
+                    var prev = CurrentFolder;
+                    CurrentFolder = n.Tag as MainTreeFolder;
+                    LocationTextBox.Text = CurrentFolder?.Path ?? "";
+                    if (!string.IsNullOrEmpty(CurrentFolder?.SearchTerm))
+                    {
+                        SearchTextBox.Text = CurrentFolder.SearchTerm;
+                    }
+                    RefreshMainListView();
+                    NavigateComplete(prev);
+                }
             }
             else
             {
@@ -474,27 +515,41 @@ namespace CodeWalker
         public void Navigate(string path)
         {
             if (!Ready) return;
-            var pathl = path.ToLowerInvariant().Replace('/', '\\');
-            if ((CurrentFolder != null) && (CurrentFolder.Path.ToLowerInvariant() == pathl)) return; //already there
+            var pathl = path.ToLowerInvariant().Replace('/', '\\').TrimEnd('\\');
+            if ((CurrentFolder != null) && (CurrentFolder.Path.ToLowerInvariant().TrimEnd('\\') == pathl))
+            {
+                if (MainListView.VirtualListSize == 0 && CurrentFolder.GetItemCount() > 0)
+                {
+                    RefreshMainListView();
+                }
+                return; //already there
+            }
             var root = RootFolder;
             var relpath = pathl;
             if (pathl.Contains(':'))
             {
                 foreach (var extf in ExtraRootFolders)
                 {
-                    if (extf == null) continue;
-                    if (pathl.StartsWith(extf.FullPath, StringComparison.InvariantCultureIgnoreCase))
+                    if (extf == null || string.IsNullOrEmpty(extf.FullPath)) continue;
+                    var extFullPath = extf.FullPath.ToLowerInvariant().Replace('/', '\\').TrimEnd('\\');
+                    if (pathl == extFullPath)
                     {
                         root = extf;
-                        relpath = pathl.Substring(extf.FullPath.Length);
+                        relpath = "";
+                        break;
+                    }
+                    if (pathl.StartsWith(extFullPath + "\\"))
+                    {
+                        root = extf;
+                        relpath = pathl.Substring(extFullPath.Length).TrimStart('\\');
                         break;
                     }
                 }
             }
             
             var hierarchy = relpath.Split(new[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
-            TreeNode n = root.TreeNode;// FindTreeNode("gta v", null);
-            if (!string.IsNullOrEmpty(path))
+            TreeNode n = root?.TreeNode;// FindTreeNode("gta v", null);
+            if (!string.IsNullOrEmpty(relpath))
             {
                 for (int i = 0; i < hierarchy.Length; i++)
                 {
@@ -506,6 +561,18 @@ namespace CodeWalker
                 if (MainTreeView.SelectedNode != n)
                 {
                     MainTreeView.SelectedNode = n; //this will trigger everything else
+                }
+                else
+                {
+                    var prev = CurrentFolder;
+                    CurrentFolder = n.Tag as MainTreeFolder;
+                    LocationTextBox.Text = CurrentFolder?.Path ?? "";
+                    if (!string.IsNullOrEmpty(CurrentFolder?.SearchTerm))
+                    {
+                        SearchTextBox.Text = CurrentFolder.SearchTerm;
+                    }
+                    RefreshMainListView();
+                    NavigateComplete(prev);
                 }
             }
             else
@@ -722,13 +789,21 @@ namespace CodeWalker
 
             UpdateStatus("Scanning...");
 
+            var gtapath = GTAFolder.GetCurrentGTAFolderWithTrailingSlash();
             var root = new MainTreeFolder();
-            root.FullPath = GTAFolder.GetCurrentGTAFolderWithTrailingSlash();
+            root.FullPath = gtapath;
             root.Path = "";
             root.Name = "GTA V";
             RootFolder = root;
 
-            RefreshMainTreeViewRoot(root);
+            if (Settings.Default.RPFExplorerAutoLoadGTA || GTALoaded)
+            {
+                if (Directory.Exists(gtapath))
+                {
+                    RefreshMainTreeViewRoot(root);
+                    GTALoaded = true;
+                }
+            }
 
 
             var remFolders = new List<MainTreeFolder>();
@@ -756,18 +831,38 @@ namespace CodeWalker
             Ready = true;
 
             MainTreeViewRefreshComplete();
+            UpdateLoadGTAButtonVisibility();
         }
         private void RefreshMainTreeViewRoot(MainTreeFolder f, bool extra = false)
         {
             var allRpfs = new List<RpfFile>();
-            var fullPath = f.FullPath;
-            var subPath = f.Path;
+            var fullPath = f.FullPath ?? "";
+            if (!fullPath.EndsWith("\\")) fullPath += "\\";
+            var subPath = f.Path ?? "";
+            if (!string.IsNullOrEmpty(subPath) && !subPath.EndsWith("\\")) subPath += "\\";
             var allpaths = Directory.GetFileSystemEntries(fullPath, "*", SearchOption.AllDirectories);
-            var nodes = new Dictionary<string, MainTreeFolder>();
+            var nodes = new Dictionary<string, MainTreeFolder>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var path in allpaths)
+            foreach (var rawpath in allpaths)
             {
-                var relpath = path.Replace(fullPath, "");
+                var path = rawpath.TrimEnd('\\', '/');
+                var relpath = path;
+                if (path.StartsWith(fullPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    relpath = path.Substring(fullPath.Length);
+                }
+                else
+                {
+                    var fullTrim = fullPath.TrimEnd('\\');
+                    var idxMatch = path.IndexOf(fullTrim, StringComparison.OrdinalIgnoreCase);
+                    if (idxMatch >= 0)
+                    {
+                        relpath = path.Substring(idxMatch + fullTrim.Length);
+                    }
+                }
+                relpath = relpath.TrimStart('\\');
+                if (string.IsNullOrEmpty(relpath)) continue;
+
                 var filepathl = path.ToLowerInvariant();
 
                 var isFile = File.Exists(path); //could be a folder
@@ -867,6 +962,10 @@ namespace CodeWalker
             if (AllRpfs == null)
             {
                 AllRpfs = allRpfs;
+            }
+            else
+            {
+                AllRpfs.AddRange(allRpfs);
             }
 
         }
@@ -987,7 +1086,7 @@ namespace CodeWalker
 
                     RecurseAddMainTreeViewNodes(f, root);
 
-                    root.Expand();
+                    root?.Expand();
                 }
             }
             catch { }
@@ -1045,7 +1144,14 @@ namespace CodeWalker
                     }
                     else
                     {
-                        Navigate(RootFolder);
+                        if (RootFolder?.TreeNode != null)
+                        {
+                            Navigate(RootFolder);
+                        }
+                        else if (ExtraRootFolders.Count > 0 && ExtraRootFolders[0].TreeNode != null)
+                        {
+                            Navigate(ExtraRootFolders[0]);
+                        }
                     }
 
 
@@ -3555,25 +3661,37 @@ namespace CodeWalker
             if (string.IsNullOrEmpty(folderPath)) return;
             if (!Directory.Exists(folderPath)) return;
 
+            var cleanPath = folderPath.Trim().TrimEnd('\\', '/');
             foreach (var folder in ExtraRootFolders)
             {
-                if (folder.FullPath == folderPath) return;
+                if (string.Equals(folder.FullPath?.TrimEnd('\\', '/'), cleanPath, StringComparison.OrdinalIgnoreCase)) return;
             }
 
             var root = new MainTreeFolder();
-            root.FullPath = folderPath;
-            root.Path = folderPath;
-            root.Name = Path.GetFileName(Path.GetDirectoryName(folderPath));
+            root.FullPath = cleanPath + "\\";
+            root.Path = cleanPath + "\\";
+            root.Name = new DirectoryInfo(cleanPath).Name;
             root.IsExtraFolder = true;
             ExtraRootFolders.Add(root);
+            SaveSettings();
 
             Task.Run(() =>
             {
-                RefreshMainTreeViewRoot(root);
+                RefreshMainTreeViewRoot(root, true);
 
                 Invoke(new Action(() => 
                 {
-                    MainTreeView.SelectedNode = root.TreeNode;
+                    if (MainTreeView.SelectedNode != root.TreeNode)
+                    {
+                        MainTreeView.SelectedNode = root.TreeNode;
+                    }
+                    else
+                    {
+                        CurrentFolder = root;
+                        LocationTextBox.Text = root.Path ?? "";
+                        RefreshMainListView();
+                        NavigateComplete(null);
+                    }
                 }));
             });
         }
@@ -3718,6 +3836,32 @@ namespace CodeWalker
         private void ExploreForm_Load(object sender, EventArgs e)
         {
             Init();
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+
+            if (e.Cancel) return;
+
+            CleanupDropFolder();
+            SaveSettings();
+            GTAFolder.UpdateSettings();
+
+            if (IsStandalone || (Application.OpenForms.Count <= 1))
+            {
+                Process.GetCurrentProcess().Kill();
+            }
+            else
+            {
+                try
+                {
+                    MainTreeView.BeginUpdate();
+                    MainTreeView.SelectedNode = null;
+                    MainTreeView.Nodes.Clear();
+                }
+                catch { }
+            }
         }
 
         private void ExploreForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -4523,19 +4667,113 @@ namespace CodeWalker
         {
             OptionsStartInEditModeMenu.Checked = !OptionsStartInEditModeMenu.Checked;
             Settings.Default.RPFExplorerStartInEditMode = OptionsStartInEditModeMenu.Checked;
+            Settings.Default.Save();
         }
 
         private void OptionsStartInFolderDefaultMenu_Click(object sender, EventArgs e)
         {
-            Settings.Default.RPFExplorerStartFolder = string.Empty;
-            OptionsStartInFolderValueMenu.Text = "(Default)";
+            SetStartFolder(string.Empty);
         }
 
         private void OptionsStartInFolderCurrentMenu_Click(object sender, EventArgs e)
         {
             if (CurrentFolder == null) return;
-            Settings.Default.RPFExplorerStartFolder = CurrentFolder.Path;
-            OptionsStartInFolderValueMenu.Text = string.IsNullOrEmpty(CurrentFolder.Path) ? "(Default)" : CurrentFolder.Path;
+            SetStartFolder(CurrentFolder.FullPath ?? CurrentFolder.Path);
+        }
+
+        private void OptionsStartInFolderBrowseMenu_Click(object sender, EventArgs e)
+        {
+            using (var fbd = new FolderBrowserDialog())
+            {
+                fbd.Description = "Select default startup folder";
+                if (!string.IsNullOrEmpty(Settings.Default.RPFExplorerStartFolder) && Directory.Exists(Settings.Default.RPFExplorerStartFolder))
+                {
+                    fbd.SelectedPath = Settings.Default.RPFExplorerStartFolder;
+                }
+                if (fbd.ShowDialog(this) == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                {
+                    SetStartFolder(fbd.SelectedPath);
+                }
+            }
+        }
+
+        private void SetStartFolder(string folderPath)
+        {
+            folderPath = folderPath?.Trim();
+            Settings.Default.RPFExplorerStartFolder = folderPath ?? string.Empty;
+            OptionsStartInFolderValueMenu.Text = string.IsNullOrEmpty(folderPath) ? "(Default)" : folderPath;
+            if (!string.IsNullOrEmpty(folderPath) && folderPath.Contains(':') && Directory.Exists(folderPath))
+            {
+                EnsureExtraRootFolder(folderPath);
+            }
+            SaveSettings();
+        }
+
+        private void OptionsAutoLoadGTAMenu_Click(object sender, EventArgs e)
+        {
+            Settings.Default.RPFExplorerAutoLoadGTA = OptionsAutoLoadGTAMenu.Checked;
+            Settings.Default.Save();
+            UpdateLoadGTAButtonVisibility();
+        }
+
+        private void UpdateLoadGTAButtonVisibility()
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(UpdateLoadGTAButtonVisibility));
+                return;
+            }
+            LoadGTAButton.Visible = !Settings.Default.RPFExplorerAutoLoadGTA && !GTALoaded;
+        }
+
+        private void LoadGTAButton_Click(object sender, EventArgs e)
+        {
+            if (GTALoaded) return;
+
+            if (!GTAFolder.UpdateGTAFolder(true))
+            {
+                return;
+            }
+
+            LoadGTAButton.Enabled = false;
+            LoadGTAButton.Text = "Loading GTA...";
+
+            Task.Run(() =>
+            {
+                try
+                {
+                    GTA5Keys.LoadFromPath(GTAFolder.CurrentGTAFolder, GTAFolder.IsGen9, Settings.Default.Key);
+                }
+                catch { }
+
+                UpdateStatus("Scanning GTA V...");
+
+                if (RootFolder == null)
+                {
+                    var gtapath = GTAFolder.GetCurrentGTAFolderWithTrailingSlash();
+                    var root = new MainTreeFolder();
+                    root.FullPath = gtapath;
+                    root.Path = "";
+                    root.Name = "GTA V";
+                    RootFolder = root;
+                }
+
+                RefreshMainTreeViewRoot(RootFolder);
+
+                GTALoaded = true;
+
+                UpdateStatus("GTA V scan complete.");
+
+                Invoke(new Action(() =>
+                {
+                    LoadGTAButton.Visible = false;
+                    Ready = true;
+                    if (CurrentFolder == null)
+                    {
+                        Navigate(RootFolder);
+                    }
+                }));
+            });
         }
 
         private void CopyToModsFolderButton_Click(object sender, EventArgs e)
@@ -4565,13 +4803,19 @@ namespace CodeWalker
         public void AddFile(string file)
         {
             if (Files == null) Files = new List<string>();
-            Files.Add(file);
+            if (!Files.Contains(file))
+            {
+                Files.Add(file);
+            }
         }
         public void AddChild(MainTreeFolder child)
         {
             if (Children == null) Children = new List<MainTreeFolder>();
-            Children.Add(child);
-            child.Parent = this;
+            if (!Children.Contains(child))
+            {
+                Children.Add(child);
+                child.Parent = this;
+            }
         }
         public void AddChildToHierarchy(MainTreeFolder child)
         {
@@ -4808,7 +5052,18 @@ namespace CodeWalker
         {
             Parent = parent;
             Name = new FileInfo(file).Name;
-            Path = file.Replace(rootpath, "");
+            if (!string.IsNullOrEmpty(rootpath) && file.StartsWith(rootpath, StringComparison.OrdinalIgnoreCase))
+            {
+                Path = file.Substring(rootpath.Length);
+            }
+            else if (parent != null && !string.IsNullOrEmpty(parent.FullPath) && file.StartsWith(parent.FullPath, StringComparison.OrdinalIgnoreCase))
+            {
+                Path = file.Substring(parent.FullPath.Length);
+            }
+            else
+            {
+                Path = file;
+            }
             FullPath = file;
         }
         public MainListItem(RpfFileEntry file, string rootpath, MainTreeFolder parent)

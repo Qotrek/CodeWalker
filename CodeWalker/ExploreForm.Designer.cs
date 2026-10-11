@@ -1,4 +1,4 @@
-﻿namespace CodeWalker
+namespace CodeWalker
 {
     partial class ExploreForm
     {
@@ -83,7 +83,10 @@
             this.toolStripSeparator12 = new System.Windows.Forms.ToolStripSeparator();
             this.OptionsStartInFolderDefaultMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.OptionsStartInFolderCurrentMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.OptionsStartInFolderBrowseMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.OptionsAutoLoadGTAMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.MainToolbar = new System.Windows.Forms.ToolStrip();
+            this.LoadGTAButton = new System.Windows.Forms.ToolStripButton();
             this.BackButton = new System.Windows.Forms.ToolStripSplitButton();
             this.BackListButton = new System.Windows.Forms.ToolStripMenuItem();
             this.ForwardButton = new System.Windows.Forms.ToolStripSplitButton();
@@ -568,7 +571,8 @@
             // 
             this.OptionsMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.OptionsStartInEditModeMenu,
-            this.OptionsStartInFolderMenu});
+            this.OptionsStartInFolderMenu,
+            this.OptionsAutoLoadGTAMenu});
             this.OptionsMenu.Name = "OptionsMenu";
             this.OptionsMenu.Size = new System.Drawing.Size(61, 20);
             this.OptionsMenu.Text = "Options";
@@ -576,7 +580,7 @@
             // OptionsStartInEditModeMenu
             // 
             this.OptionsStartInEditModeMenu.Name = "OptionsStartInEditModeMenu";
-            this.OptionsStartInEditModeMenu.Size = new System.Drawing.Size(168, 22);
+            this.OptionsStartInEditModeMenu.Size = new System.Drawing.Size(225, 22);
             this.OptionsStartInEditModeMenu.Text = "Start in Edit mode";
             this.OptionsStartInEditModeMenu.Click += new System.EventHandler(this.OptionsStartInEditModeMenu_Click);
             // 
@@ -586,9 +590,10 @@
             this.OptionsStartInFolderValueMenu,
             this.toolStripSeparator12,
             this.OptionsStartInFolderDefaultMenu,
-            this.OptionsStartInFolderCurrentMenu});
+            this.OptionsStartInFolderCurrentMenu,
+            this.OptionsStartInFolderBrowseMenu});
             this.OptionsStartInFolderMenu.Name = "OptionsStartInFolderMenu";
-            this.OptionsStartInFolderMenu.Size = new System.Drawing.Size(168, 22);
+            this.OptionsStartInFolderMenu.Size = new System.Drawing.Size(225, 22);
             this.OptionsStartInFolderMenu.Text = "Start in Folder";
             // 
             // OptionsStartInFolderValueMenu
@@ -617,6 +622,21 @@
             this.OptionsStartInFolderCurrentMenu.Text = "Set to Current Folder";
             this.OptionsStartInFolderCurrentMenu.Click += new System.EventHandler(this.OptionsStartInFolderCurrentMenu_Click);
             // 
+            // OptionsStartInFolderBrowseMenu
+            // 
+            this.OptionsStartInFolderBrowseMenu.Name = "OptionsStartInFolderBrowseMenu";
+            this.OptionsStartInFolderBrowseMenu.Size = new System.Drawing.Size(183, 22);
+            this.OptionsStartInFolderBrowseMenu.Text = "Choose Folder...";
+            this.OptionsStartInFolderBrowseMenu.Click += new System.EventHandler(this.OptionsStartInFolderBrowseMenu_Click);
+            // 
+            // OptionsAutoLoadGTAMenu
+            // 
+            this.OptionsAutoLoadGTAMenu.CheckOnClick = true;
+            this.OptionsAutoLoadGTAMenu.Name = "OptionsAutoLoadGTAMenu";
+            this.OptionsAutoLoadGTAMenu.Size = new System.Drawing.Size(225, 22);
+            this.OptionsAutoLoadGTAMenu.Text = "Auto-load GTA V on startup";
+            this.OptionsAutoLoadGTAMenu.Click += new System.EventHandler(this.OptionsAutoLoadGTAMenu_Click);
+            // 
             // MainToolbar
             // 
             this.MainToolbar.CanOverflow = false;
@@ -627,6 +647,7 @@
             this.LocationTextBox,
             this.GoButton,
             this.RefreshButton,
+            this.LoadGTAButton,
             this.toolStripSeparator10,
             this.EditModeButton,
             this.toolStripSeparator1,
@@ -637,6 +658,16 @@
             this.MainToolbar.Size = new System.Drawing.Size(876, 25);
             this.MainToolbar.TabIndex = 1;
             this.MainToolbar.Text = "Main Toolbar";
+            // 
+            // LoadGTAButton
+            // 
+            this.LoadGTAButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.LoadGTAButton.Name = "LoadGTAButton";
+            this.LoadGTAButton.Size = new System.Drawing.Size(60, 22);
+            this.LoadGTAButton.Text = "Load GTA";
+            this.LoadGTAButton.ToolTipText = "Load GTA V folder and archives";
+            this.LoadGTAButton.Visible = false;
+            this.LoadGTAButton.Click += new System.EventHandler(this.LoadGTAButton_Click);
             // 
             // BackButton
             // 
@@ -1509,6 +1540,9 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator12;
         private System.Windows.Forms.ToolStripMenuItem OptionsStartInFolderDefaultMenu;
         private System.Windows.Forms.ToolStripMenuItem OptionsStartInFolderCurrentMenu;
+        private System.Windows.Forms.ToolStripMenuItem OptionsStartInFolderBrowseMenu;
+        private System.Windows.Forms.ToolStripMenuItem OptionsAutoLoadGTAMenu;
+        private System.Windows.Forms.ToolStripButton LoadGTAButton;
         private System.Windows.Forms.ToolStripMenuItem ListContextPasteMenu;
         private System.Windows.Forms.ToolStripMenuItem EditPasteMenu;
         private System.Windows.Forms.ToolStripMenuItem ToolsJenkGenMenu;
