@@ -264,45 +264,52 @@ namespace CodeWalker.Forms
         }
         public void RenderScene(DeviceContext context)
         {
-            float elapsed = (float)frametimer.Elapsed.TotalSeconds;
-            frametimer.Restart();
+            try
+            {
+                float elapsed = (float)frametimer.Elapsed.TotalSeconds;
+                frametimer.Restart();
 
-            if (pauserendering) return;
+                if (pauserendering) return;
 
-            if (!Monitor.TryEnter(Renderer.RenderSyncRoot, 50))
-            { return; } //couldn't get a lock, try again next time
+                if (!Monitor.TryEnter(Renderer.RenderSyncRoot, 50))
+                { return; } //couldn't get a lock, try again next time
 
-            UpdateControlInputs(elapsed);
+                try
+                {
+                    UpdateControlInputs(elapsed);
 
+                    Renderer.Update(elapsed, MouseLastPoint.X, MouseLastPoint.Y);
 
+                    UpdateWidgets();
 
-            Renderer.Update(elapsed, MouseLastPoint.X, MouseLastPoint.Y);
+                    Renderer.BeginRender(context);
 
-            UpdateWidgets();
+                    Renderer.RenderSkyAndClouds();
 
-            Renderer.BeginRender(context);
+                    RenderSingleItem();
 
-            Renderer.RenderSkyAndClouds();
+                    RenderGrid(context);
 
+                    RenderLightSelection();
 
-            RenderSingleItem();
+                    Renderer.RenderQueued();
 
+                    Renderer.RenderSelectionGeometry(MapSelectionMode.Entity);
 
-            RenderGrid(context);
+                    Renderer.RenderFinalPass();
 
-            RenderLightSelection();
+                    RenderWidgets();
 
-            Renderer.RenderQueued();
-
-            Renderer.RenderSelectionGeometry(MapSelectionMode.Entity);
-
-            Renderer.RenderFinalPass();
-
-            RenderWidgets();
-
-            Renderer.EndRender();
-
-            Monitor.Exit(Renderer.RenderSyncRoot);
+                    Renderer.EndRender();
+                }
+                finally
+                {
+                    Monitor.Exit(Renderer.RenderSyncRoot);
+                }
+            }
+            catch
+            {
+            }
         }
         public bool ConfirmQuit()
         {

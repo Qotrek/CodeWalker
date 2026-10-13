@@ -1,4 +1,4 @@
-﻿using CodeWalker.GameFiles;
+using CodeWalker.GameFiles;
 using CodeWalker.Properties;
 using CodeWalker.World;
 using SharpDX;
@@ -3728,7 +3728,7 @@ namespace CodeWalker.Rendering
                         }
                     }
                 }
-                if (texDict != 0)
+                if (texDict != 0 && gameFileCache != null)
                 {
                     if (cacheSD)
                     {
@@ -3751,8 +3751,10 @@ namespace CodeWalker.Rendering
                         }
                     }
                     MetaHash ptxdname = gameFileCache.TryGetParentYtdHash(texDict);
-                    while (ptxdname != 0) //look for parent HD txds
+                    int parentDepth = 0;
+                    while (ptxdname != 0 && parentDepth < 20) //look for parent HD txds
                     {
+                        parentDepth++;
                         if (cacheSD)
                         {
                             var pytd = gameFileCache.GetYtd(ptxdname);

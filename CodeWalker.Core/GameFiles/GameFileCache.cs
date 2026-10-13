@@ -1,4 +1,4 @@
-﻿using SharpDX;
+using SharpDX;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -27,8 +27,8 @@ namespace CodeWalker.GameFiles
         private volatile bool archetypesLoaded = false;
         private Dictionary<uint, Archetype> archetypeDict = new Dictionary<uint, Archetype>();
         private Dictionary<uint, RpfFileEntry> textureLookup = new Dictionary<uint, RpfFileEntry>();
-        private Dictionary<MetaHash, MetaHash> textureParents;
-        private Dictionary<MetaHash, MetaHash> hdtexturelookup;
+        private Dictionary<MetaHash, MetaHash> textureParents = new Dictionary<MetaHash, MetaHash>();
+        private Dictionary<MetaHash, MetaHash> hdtexturelookup = new Dictionary<MetaHash, MetaHash>();
 
         private object updateSyncRoot = new object();
         private object requestSyncRoot = new object();
@@ -163,6 +163,8 @@ namespace CodeWalker.GameFiles
             mainCache.Clear();
 
             textureLookup.Clear();
+            textureParents = new Dictionary<MetaHash, MetaHash>();
+            hdtexturelookup = new Dictionary<MetaHash, MetaHash>();
 
             GameFile queueclear;
             while (requestQueue.TryDequeue(out queueclear))
@@ -2629,7 +2631,7 @@ namespace CodeWalker.GameFiles
         public YtdFile TryGetParentYtd(uint hash)
         {
             MetaHash phash;
-            if (textureParents.TryGetValue(hash, out phash))
+            if (textureParents != null && textureParents.TryGetValue(hash, out phash))
             {
                 return GetYtd(phash);
             }
@@ -2638,7 +2640,10 @@ namespace CodeWalker.GameFiles
         public uint TryGetParentYtdHash(uint hash)
         {
             MetaHash phash = 0;
-            textureParents.TryGetValue(hash, out phash);
+            if (textureParents != null)
+            {
+                textureParents.TryGetValue(hash, out phash);
+            }
             return phash;
         }
         public uint TryGetHDTextureHash(uint txdhash)
@@ -2656,8 +2661,10 @@ namespace CodeWalker.GameFiles
             Texture tex = null;
 
             var ytd = TryGetParentYtd(txdhash);
-            while ((ytd != null) && (tex == null))
+            int depth = 0;
+            while ((ytd != null) && (tex == null) && (depth < 20))
             {
+                depth++;
                 if (ytd.Loaded && (ytd.TextureDict != null))
                 {
                     tex = ytd.TextureDict.Lookup(texhash);

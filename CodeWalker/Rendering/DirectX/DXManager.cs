@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -322,7 +322,13 @@ namespace CodeWalker.Rendering
                         return; //the form was closed... stop!!
                     }
 
-                    dxform.RenderScene(context);
+                    try
+                    {
+                        dxform.RenderScene(context);
+                    }
+                    catch
+                    {
+                    }
 
                     try
                     {
