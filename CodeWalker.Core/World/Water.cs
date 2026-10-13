@@ -1,4 +1,4 @@
-﻿using CodeWalker.GameFiles;
+using CodeWalker.GameFiles;
 using SharpDX;
 using System;
 using System.Collections.Generic;
@@ -39,8 +39,10 @@ namespace CodeWalker.World
 
         private void LoadWaterXml(string filename)
         {
-            var rpfman = GameFileCache.RpfMan;
+            var rpfman = GameFileCache?.RpfMan;
+            if (rpfman == null) return;
             XmlDocument waterxml = rpfman.GetFileXml(filename);
+            if (waterxml == null || waterxml.DocumentElement == null) return;
 
             XmlElement waterdata = waterxml.DocumentElement;
 

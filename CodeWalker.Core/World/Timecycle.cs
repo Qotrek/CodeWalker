@@ -1,4 +1,4 @@
-﻿using CodeWalker.GameFiles;
+using CodeWalker.GameFiles;
 using SharpDX;
 using System;
 using System.Collections.Generic;
@@ -31,11 +31,27 @@ namespace CodeWalker.World
 
         public void Init(GameFileCache gameFileCache, Action<string> updateStatus)
         {
-            var rpfman = gameFileCache.RpfMan;
+            var rpfman = gameFileCache?.RpfMan;
+            if (rpfman == null)
+            {
+                Inited = true;
+                return;
+            }
 
             string filename = "common.rpf\\data\\levels\\gta5\\time.xml";
 
             XmlDocument timexml = rpfman.GetFileXml(filename);
+            if (timexml == null || timexml.DocumentElement == null)
+            {
+                sun_roll = 122.0f;
+                moon_roll = -122.0f;
+                moon_wobble_freq = 2.0f;
+                moon_wobble_amp = 0.2f;
+                moon_wobble_offset = 0.375f;
+                Samples.Clear();
+                Inited = true;
+                return;
+            }
 
             XmlElement time = timexml.DocumentElement;
             XmlNode suninfo = time.SelectSingleNode("suninfo");
@@ -43,25 +59,37 @@ namespace CodeWalker.World
             XmlNodeList samples = time.SelectNodes("sample");
             XmlNodeList regions = time.SelectNodes("region");
 
-            sun_roll = Xml.GetFloatAttribute(suninfo, "sun_roll");
-            sun_yaw = Xml.GetFloatAttribute(suninfo, "sun_yaw");
-            moon_roll = Xml.GetFloatAttribute(mooninfo, "moon_roll");
-            moon_wobble_freq = Xml.GetFloatAttribute(mooninfo, "moon_wobble_freq");
-            moon_wobble_amp = Xml.GetFloatAttribute(mooninfo, "moon_wobble_amp");
-            moon_wobble_offset = Xml.GetFloatAttribute(mooninfo, "moon_wobble_offset");
+            if (suninfo != null)
+            {
+                sun_roll = Xml.GetFloatAttribute(suninfo, "sun_roll");
+                sun_yaw = Xml.GetFloatAttribute(suninfo, "sun_yaw");
+            }
+            if (mooninfo != null)
+            {
+                moon_roll = Xml.GetFloatAttribute(mooninfo, "moon_roll");
+                moon_wobble_freq = Xml.GetFloatAttribute(mooninfo, "moon_wobble_freq");
+                moon_wobble_amp = Xml.GetFloatAttribute(mooninfo, "moon_wobble_amp");
+                moon_wobble_offset = Xml.GetFloatAttribute(mooninfo, "moon_wobble_offset");
+            }
 
             Samples.Clear();
-            for (int i = 0; i < samples.Count; i++)
+            if (samples != null)
             {
-                TimecycleSample tcs = new TimecycleSample();
-                tcs.Init(samples[i]);
-                Samples.Add(tcs);
+                for (int i = 0; i < samples.Count; i++)
+                {
+                    TimecycleSample tcs = new TimecycleSample();
+                    tcs.Init(samples[i]);
+                    Samples.Add(tcs);
+                }
             }
 
             Regions.Clear();
-            for (int i = 0; i < regions.Count; i++)
+            if (regions != null)
             {
-                Regions.Add(Xml.GetStringAttribute(regions[i], "name"));
+                for (int i = 0; i < regions.Count; i++)
+                {
+                    Regions.Add(Xml.GetStringAttribute(regions[i], "name"));
+                }
             }
 
             Inited = true;
@@ -74,6 +102,15 @@ namespace CodeWalker.World
             float h = hour - ((float)Math.Floor(day) * 24.0f);
             CurrentHour = h;
 
+            if (Samples == null || Samples.Count == 0) return;
+            if (Samples.Count == 1)
+            {
+                CurrentSampleIndex = 0;
+                CurrentSampleBlend = 1.0f;
+                NextSampleBlend = 0.0f;
+                return;
+            }
+
             for (int i = 0; i < Samples.Count; i++)
             {
                 bool lasti = (i >= Samples.Count - 1);
@@ -85,7 +122,7 @@ namespace CodeWalker.World
                     float blendrange = (nxth - cur.hour) - cur.duration;
                     float blendstart = cur.hour + cur.duration;
                     float blendrel = h - blendstart;
-                    float blendval = blendrel / blendrange;
+                    float blendval = (blendrange > 0.0f) ? (blendrel / blendrange) : 0.0f;
                     float blend = Math.Min(Math.Max(blendval, 0.0f), 1.0f);
                     NextSampleBlend = blend;
                     CurrentSampleBlend = 1.0f - blend;

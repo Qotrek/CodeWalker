@@ -1,4 +1,4 @@
-﻿using CodeWalker.GameFiles;
+using CodeWalker.GameFiles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,26 +21,40 @@ namespace CodeWalker.World
         {
             GameFileCache = gameFileCache;
 
-            var rpfman = gameFileCache.RpfMan;
+            var rpfman = gameFileCache?.RpfMan;
+            if (rpfman == null)
+            {
+                Inited = true;
+                return;
+            }
 
             string trainsfilename = "common.rpf\\data\\levels\\gta5\\trains.xml";
             XmlDocument trainsxml = rpfman.GetFileXml(trainsfilename);
-            XmlElement trainsdata = trainsxml.DocumentElement;
-            //TODO: parse train_configs
+            if (trainsxml != null && trainsxml.DocumentElement != null)
+            {
+                XmlElement trainsdata = trainsxml.DocumentElement;
+                //TODO: parse train_configs
+            }
 
 
             string tracksfilename = "common.rpf\\data\\levels\\gta5\\traintracks.xml";
             XmlDocument tracksxml = rpfman.GetFileXml(tracksfilename);
-            XmlElement tracksdata = tracksxml.DocumentElement;
-            XmlNodeList tracks = tracksdata.SelectNodes("train_track");
-
             TrainTracks.Clear();
-            for (int i = 0; i < tracks.Count; i++)
+            if (tracksxml != null && tracksxml.DocumentElement != null)
             {
-                var trackxml = tracks[i];
-                TrainTrack tt = new TrainTrack();
-                tt.Load(gameFileCache, trackxml);
-                TrainTracks.Add(tt);
+                XmlElement tracksdata = tracksxml.DocumentElement;
+                XmlNodeList tracks = tracksdata.SelectNodes("train_track");
+
+                if (tracks != null)
+                {
+                    for (int i = 0; i < tracks.Count; i++)
+                    {
+                        var trackxml = tracks[i];
+                        TrainTrack tt = new TrainTrack();
+                        tt.Load(gameFileCache, trackxml);
+                        TrainTracks.Add(tt);
+                    }
+                }
             }
 
 

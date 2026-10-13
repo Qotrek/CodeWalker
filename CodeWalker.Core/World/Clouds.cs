@@ -1,4 +1,4 @@
-﻿using CodeWalker.GameFiles;
+using CodeWalker.GameFiles;
 using SharpDX;
 using System;
 using System.Collections.Generic;
@@ -74,8 +74,9 @@ namespace CodeWalker.World
         public void Init(GameFileCache gameFileCache, Action<string> updateStatus, Weather weather)
         {
             Weather = weather;
-            Timecycle = weather.Timecycle;
-            var rpfman = gameFileCache.RpfMan;
+            Timecycle = weather?.Timecycle;
+            var rpfman = gameFileCache?.RpfMan;
+            if (rpfman == null) return;
 
             string filename = "common.rpf\\data\\clouds.xml";
 
@@ -88,6 +89,15 @@ namespace CodeWalker.World
 
             XmlDocument cloudsxml = rpfman.GetFileXml(filename);
             XmlDocument cloudskfxml = rpfman.GetFileXml(kffilename);
+            if (cloudskfxml == null && gameFileCache.EnableDlc)
+            {
+                cloudskfxml = rpfman.GetFileXml("common.rpf\\data\\cloudkeyframes.xml");
+            }
+
+            if (cloudsxml == null || cloudsxml.DocumentElement == null || cloudskfxml == null || cloudskfxml.DocumentElement == null)
+            {
+                return;
+            }
 
             HatManager = new CloudHatManager();
             HatManager.Init(cloudsxml.DocumentElement); //CloudHatManager

@@ -1,4 +1,4 @@
-﻿using CodeWalker.GameFiles;
+using CodeWalker.GameFiles;
 using SharpDX;
 using System;
 using System.Collections.Generic;
@@ -33,7 +33,8 @@ namespace CodeWalker.World
         public void Init(GameFileCache gameFileCache, Action<string> updateStatus, Timecycle timecycle)
         {
             Timecycle = timecycle;
-            var rpfman = gameFileCache.RpfMan;
+            var rpfman = gameFileCache?.RpfMan;
+            if (rpfman == null) return;
 
             //TODO: RpfMan should be able to get the right version? or maybe let gameFileCache do it!
             string filename = "common.rpf\\data\\levels\\gta5\\weather.xml";
@@ -43,34 +44,55 @@ namespace CodeWalker.World
             }
 
             XmlDocument weatherxml = rpfman.GetFileXml(filename);
+            if (weatherxml == null && gameFileCache.EnableDlc)
+            {
+                filename = "common.rpf\\data\\levels\\gta5\\weather.xml";
+                weatherxml = rpfman.GetFileXml(filename);
+            }
+
+            if (weatherxml == null || weatherxml.DocumentElement == null)
+            {
+                TimecycleMods = new TimecycleMods();
+                TimecycleMods.Init(gameFileCache, updateStatus);
+                return;
+            }
 
             XmlElement weather = weatherxml.DocumentElement;
 
             XmlNodeList weathergpufx = weather.SelectNodes("WeatherGpuFx/Item");
             WeatherGpuFx.Clear();
-            for (int i = 0; i < weathergpufx.Count; i++)
+            if (weathergpufx != null)
             {
-                var weathergpufxi = new WeatherGpuFx();
-                weathergpufxi.Init(weathergpufx[i]);
-                WeatherGpuFx[weathergpufxi.Name] = weathergpufxi;
+                for (int i = 0; i < weathergpufx.Count; i++)
+                {
+                    var weathergpufxi = new WeatherGpuFx();
+                    weathergpufxi.Init(weathergpufx[i]);
+                    WeatherGpuFx[weathergpufxi.Name] = weathergpufxi;
+                }
             }
 
             XmlNodeList weathertypes = weather.SelectNodes("WeatherTypes/Item");
             WeatherTypes.Clear();
-            for (int i = 0; i < weathertypes.Count; i++)
+            if (weathertypes != null)
             {
-                var weathertype = new WeatherType();
-                weathertype.Init(gameFileCache, weathertypes[i]);
-                WeatherTypes[weathertype.Name] = weathertype;
+                for (int i = 0; i < weathertypes.Count; i++)
+                {
+                    var weathertype = new WeatherType();
+                    weathertype.Init(gameFileCache, weathertypes[i]);
+                    WeatherTypes[weathertype.Name] = weathertype;
+                }
             }
 
             XmlNodeList weathercycles = weather.SelectNodes("WeatherCycles/Item");
             WeatherCycles.Clear();
-            for (int i = 0; i < weathercycles.Count; i++)
+            if (weathercycles != null)
             {
-                var weathercycle = new WeatherCycle();
-                weathercycle.Init(weathercycles[i]);
-                WeatherCycles.Add(weathercycle);
+                for (int i = 0; i < weathercycles.Count; i++)
+                {
+                    var weathercycle = new WeatherCycle();
+                    weathercycle.Init(weathercycles[i]);
+                    WeatherCycles.Add(weathercycle);
+                }
             }
 
 
@@ -80,7 +102,7 @@ namespace CodeWalker.World
                 CurrentWeatherType = WeatherTypes.Values.First();
                 CurrentWeatherRegion = CurrentWeatherType.GetRegion(Region);
                 NextWeatherType = CurrentWeatherType;
-                NextWeatherRegion = NextWeatherType.GetRegion(Region);
+                NextWeatherRegion = NextWeatherType?.GetRegion(Region);
             }
 
 

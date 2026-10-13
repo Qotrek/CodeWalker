@@ -1,4 +1,4 @@
-﻿using CodeWalker.GameFiles;
+using CodeWalker.GameFiles;
 using CodeWalker.Properties;
 using CodeWalker.Rendering;
 using CodeWalker.Utils;
@@ -117,6 +117,7 @@ namespace CodeWalker.Forms
 
 
         bool animsInited = false;
+        bool weatherInitAttempted = false;
         YcdFile Ycd = null;
         ClipMapEntry AnimClip = null;
 
@@ -343,66 +344,84 @@ namespace CodeWalker.Forms
 
             while (formopen && !IsDisposed) //main asset loop
             {
-
-                if ((gameFileCache != null) && (gameFileCache.IsInited))
+                try
                 {
-                    if (!timecycle.Inited)
+                    if ((gameFileCache != null) && (gameFileCache.IsInited))
                     {
-                        //UpdateStatus("Loading timecycles...");
-                        timecycle.Init(gameFileCache, UpdateStatus);
-                        timecycle.SetTime(Renderer.timeofday);
-                        //UpdateStatus("Timecycles loaded.");
-                    }
-                    if (!animsInited)
-                    {
-                        InitAnimation();
-                        animsInited = true;
-                    }
-                    if (Renderer.renderskydome)
-                    {
-                        if (!weather.Inited)
+                        if (!timecycle.Inited)
                         {
                             try
                             {
-                                UpdateStatus("Loading weather...");
-                                weather.Init(gameFileCache, UpdateStatus, timecycle);
-                                UpdateStatus("Weather loaded.");
-
-                                if (currentArchetype != null)
-                                {
-                                    UpdateStatus("Archetype: " + currentArchetype.Name.ToString());
-                                }
-                                else
-                                {
-                                    UpdateStatus("Ready");
-                                }
+                                //UpdateStatus("Loading timecycles...");
+                                timecycle.Init(gameFileCache, UpdateStatus);
+                                timecycle.SetTime(Renderer.timeofday);
+                                //UpdateStatus("Timecycles loaded.");
                             }
-                            catch (Exception)
+                            catch
                             {
-
+                                timecycle.Inited = true;
                             }
                         }
-                        //if (!clouds.Inited)
-                        //{
-                        //    UpdateStatus("Loading clouds...");
-                        //    clouds.Init(gameFileCache, UpdateStatus, weather);
-                        //    UpdateStatus("Clouds loaded.");
-                        //}
+                        if (!animsInited)
+                        {
+                            try
+                            {
+                                InitAnimation();
+                            }
+                            catch { }
+                            animsInited = true;
+                        }
+                        if (Renderer.renderskydome)
+                        {
+                            if (!weather.Inited && !weatherInitAttempted)
+                            {
+                                weatherInitAttempted = true;
+                                try
+                                {
+                                    UpdateStatus("Loading weather...");
+                                    weather.Init(gameFileCache, UpdateStatus, timecycle);
+                                    UpdateStatus("Weather loaded.");
+
+                                    if (currentArchetype != null)
+                                    {
+                                        UpdateStatus("Archetype: " + currentArchetype.Name.ToString());
+                                    }
+                                    else
+                                    {
+                                        UpdateStatus("Ready");
+                                    }
+                                }
+                                catch (Exception)
+                                {
+
+                                }
+                            }
+                            //if (!clouds.Inited)
+                            //{
+                            //    UpdateStatus("Loading clouds...");
+                            //    clouds.Init(gameFileCache, UpdateStatus, weather);
+                            //    UpdateStatus("Clouds loaded.");
+                            //}
+                        }
+                    }
+
+
+
+                    //if ((gameFileCache != null) && (gameFileCache.IsInited))
+                    //{
+                    //    gameFileCache.ContentThreadProc();
+                    //}
+
+                    bool rcItemsPending = Renderer.ContentThreadProc();
+
+                    if (!(rcItemsPending)) //gameFileCache.ItemsStillPending || 
+                    {
+                        Thread.Sleep(1); //sleep if there's nothing to do
                     }
                 }
-
-
-
-                //if ((gameFileCache != null) && (gameFileCache.IsInited))
-                //{
-                //    gameFileCache.ContentThreadProc();
-                //}
-
-                bool rcItemsPending = Renderer.ContentThreadProc();
-
-                if (!(rcItemsPending)) //gameFileCache.ItemsStillPending || 
+                catch
                 {
-                    Thread.Sleep(1); //sleep if there's nothing to do
+                    Thread.Sleep(10);
                 }
             }
 
@@ -423,21 +442,33 @@ namespace CodeWalker.Forms
             }
             else
             {
-                ClipComboBox.Items.Clear();
-                ClipDictComboBox.Items.Clear();
-                var ycds = gameFileCache.YcdDict.Values.ToList();
-                ycds.Sort((a, b) => { return a.Name.CompareTo(b.Name); });
-                ClipDictComboBox.AutoCompleteCustomSource.Clear();
-                List<string> ycdlist = new List<string>();
-                foreach (var ycde in ycds)
+                try
                 {
-                    ycdlist.Add(ycde.GetShortName());
+                    ClipComboBox.Items.Clear();
+                    ClipDictComboBox.Items.Clear();
+                    if (gameFileCache?.YcdDict != null)
+                    {
+                        var ycds = gameFileCache.YcdDict.Values.Where(y => y != null && y.Name != null).ToList();
+                        ycds.Sort((a, b) => { return (a.Name ?? "").CompareTo(b.Name ?? ""); });
+                        ClipDictComboBox.AutoCompleteCustomSource.Clear();
+                        List<string> ycdlist = new List<string>();
+                        foreach (var ycde in ycds)
+                        {
+                            var sname = ycde.GetShortName();
+                            if (!string.IsNullOrEmpty(sname))
+                            {
+                                ycdlist.Add(sname);
+                            }
+                        }
+                        ClipDictComboBox.AutoCompleteCustomSource.AddRange(ycdlist.ToArray());
+                        ClipDictComboBox.Text = "";
+
+                        TrySelectClipDict();
+                    }
                 }
-                ClipDictComboBox.AutoCompleteCustomSource.AddRange(ycdlist.ToArray());
-                ClipDictComboBox.Text = "";
-
-                TrySelectClipDict();
-
+                catch
+                {
+                }
             }
         }
 

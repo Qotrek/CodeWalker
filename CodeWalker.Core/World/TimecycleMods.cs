@@ -1,4 +1,4 @@
-﻿using CodeWalker.GameFiles;
+using CodeWalker.GameFiles;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -20,7 +20,8 @@ namespace CodeWalker.World
         {
             Dict.Clear();
 
-            var rpfman = gameFileCache.RpfMan;
+            var rpfman = gameFileCache?.RpfMan;
+            if (rpfman == null) return;
 
             LoadXml(rpfman.GetFileXml("common.rpf\\data\\timecycle\\timecycle_mods_1.xml"));
             LoadXml(rpfman.GetFileXml("common.rpf\\data\\timecycle\\timecycle_mods_2.xml"));
@@ -32,13 +33,14 @@ namespace CodeWalker.World
             LoadXml(rpfman.GetFileXml("update\\update.rpf\\common\\data\\timecycle\\timecycle_mods_3.xml"));
             LoadXml(rpfman.GetFileXml("update\\update.rpf\\common\\data\\timecycle\\timecycle_mods_4.xml"));
 
-            if (gameFileCache.EnableDlc)
+            if (gameFileCache.EnableDlc && gameFileCache.DlcActiveRpfs != null)
             {
                 foreach (var dlcrpf in gameFileCache.DlcActiveRpfs)
                 {
+                    if (dlcrpf?.AllEntries == null) continue;
                     foreach (var file in dlcrpf.AllEntries)
                     {
-                        if (file.NameLower.EndsWith(".xml") && file.NameLower.StartsWith("timecycle_mods_"))
+                        if (file != null && file.NameLower != null && file.NameLower.EndsWith(".xml") && file.NameLower.StartsWith("timecycle_mods_"))
                         {
                             LoadXml(rpfman.GetFileXml(file.Path));
                         }
@@ -52,9 +54,9 @@ namespace CodeWalker.World
 
         private void LoadXml(XmlDocument doc)
         {
-            var root = doc.DocumentElement;
-            if (root == null)
+            if (doc == null || doc.DocumentElement == null)
             { return; }
+            var root = doc.DocumentElement;
 
             float version = Xml.GetFloatAttribute(root, "version");
 
